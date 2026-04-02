@@ -20,9 +20,11 @@ export default {
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEYS,
   cloudinary_api_secret: process.env.CLOUDINARY_SECRET_KEYS,
-  username: process.env.DOTW_USERNAME,
-  password: process.env.DOTW_PASSWORD_MD5,
-  id: process.env.DOTW_ID,
-  currency: process.env.DOTW_CURRENCY,
-  url: process.env.DOTW_URL,
+   dotw: {
+    username: process.env.DOTW_USER,
+    password: process.env.DOTW_PASS,
+    id: process.env.DOTW_ID,
+    currency: process.env.DOTW_CURRENCY || "520",
+    url: process.env.DOTW_URL,
+  }
 };
