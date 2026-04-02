@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.vercel
+.vscode
+
+
+package-lock.json
+pnpm-lock.yaml
+bun.lock
+yarn.lock
