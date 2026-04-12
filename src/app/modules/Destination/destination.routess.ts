@@ -3,11 +3,16 @@ import { DestinationControllers } from './destination.controller';
 
 const router = express.Router();
 
-// সাপ্লায়ার থেকে ডাটা এনে ডিবিতে সেভ করার রুট
+// for sync db
 router.get('/sync-destinations', DestinationControllers.syncAllDestinations);
 
-// ভবিষ্যতে ড্রপডাউনের জন্য সার্চ রুট এখানে যোগ করতে পারেন
-// router.get('/search', DestinationControllers.searchDestinations);
+// dynamic sync route (cron job )
+router.get('/sync-dynamic', DestinationControllers.syncEverythingDynamically);
+
+// search suggetion
 router.get('/search', DestinationControllers.searchCities);
+
+// search destination route 
 router.get('/destination/search', DestinationControllers.searchDestinations);
+
 export const DestinationRoutes = router;
