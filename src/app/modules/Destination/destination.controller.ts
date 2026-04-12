@@ -30,25 +30,28 @@ const syncEverythingDynamically = catchAsync(async (req: Request, res: Response)
 });
 
 
-const searchCities = catchAsync(async (req: Request, res: Response) => {
-  const result = await DestinationService.searchDestinationsFromDB(req.query);
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Cities fetched successfully",
-    data: result,
-  });
-});
-
 const searchDestinations = catchAsync(async (req: Request, res: Response) => {
-  const result = await DestinationService.searchDestinationsFromDB(req.query);
+  const query = { ...req.query };
+
+  // যদি ইউজার 'q' পাঠিয়ে থাকে (যেমন: ?q=ba)
+  if (query.q) {
+    query.search = query.q; // কুয়েরি বিল্ডারের জন্য 'search' এ ভ্যালু সেট করলাম
+    delete query.q;        // অরিজিনাল 'q' ডিলিট করলাম যাতে filter() এ সমস্যা না হয়
+  }
+
+  const result = await DestinationService.searchDestinationsFromDB(query);
+
   sendResponse(res, {
-    statusCode: httpStatus.OK,
+    statusCode: 200,
     success: true,
     message: "Destinations fetched successfully",
     data: result,
   });
 });
+
+const searchCities = searchDestinations;
+
+
 
 export const DestinationControllers = { 
   syncAllDestinations, 
