@@ -2,8 +2,30 @@ import axios from 'axios';
 import config from '../../config';
 import { jsonToXml, xmlToJson } from '../../utils/xmlParser';
 
-const callWebBeds = async (requestCommand: string, details: any = {}) => {
-  const payload: any = {
+// const callWebBeds = async (requestCommand: string, details: any = {}) => {
+//   const payload: any = {
+//     customer: {
+//       username: config.dotw.username,
+//       password: config.dotw.password,
+//       id: config.dotw.id,
+//       source: "1",
+//       product: "hotel",
+//       language: "en",
+//       request: {
+//         $: { command: requestCommand },
+//       }
+//     }
+//   };
+
+//   // যদি রিকোয়েস্টে bookingDetails বা return থাকে তবেই অ্যাড হবে
+//   if (details.bookingDetails) payload.customer.request.bookingDetails = details.bookingDetails;
+//   if (details.return) payload.customer.request.return = details.return;
+
+//   const xmlRequest = jsonToXml(payload);
+// src/app/modules/Supplier/supplier.service.ts
+
+const callWebBeds = async (requestCommand: string, details: any) => {
+  const payload = {
     customer: {
       username: config.dotw.username,
       password: config.dotw.password,
@@ -13,13 +35,11 @@ const callWebBeds = async (requestCommand: string, details: any = {}) => {
       language: "en",
       request: {
         $: { command: requestCommand },
+        // এখানে শুধু যা পাঠাবো তাই যাবে
+        ...details 
       }
     }
   };
-
-  // যদি রিকোয়েস্টে bookingDetails বা return থাকে তবেই অ্যাড হবে
-  if (details.bookingDetails) payload.customer.request.bookingDetails = details.bookingDetails;
-  if (details.return) payload.customer.request.return = details.return;
 
   const xmlRequest = jsonToXml(payload);
 
