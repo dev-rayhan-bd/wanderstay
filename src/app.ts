@@ -8,6 +8,7 @@ import morgan from 'morgan';
 import router from './app/routes';
 import globalErrorHandler from './app/middleware/globalErrorHandler';
 import notFound from './app/middleware/notFound';
+import { stripeWebhookHandler } from './app/webhook/webhook.stripe';
 
 
 
@@ -38,6 +39,12 @@ app.use(
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     credentials: true,
   })
+);
+
+app.post(
+  '/api/v1/bookings/webhook',
+  express.raw({ type: 'application/json' }), 
+  stripeWebhookHandler
 );
 
 app.use(morgan('dev'));

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { AuthRoutes } from '../modules/Auth/auth.routes';
 import { HotelRoutes } from '../modules/Hotel/hotel.routes';
 import { DestinationRoutes } from '../modules/Destination/destination.routess';
+import { BookingRoutes } from '../modules/Booking/booking.routes';
 
 
 
@@ -22,6 +23,10 @@ const moduleRoutes = [
  {
     path: '/sync',
     route: DestinationRoutes,
+  },
+ {
+    path: '/bookings',
+    route: BookingRoutes,
   },
 
 ];
