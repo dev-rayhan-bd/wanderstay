@@ -14,7 +14,11 @@ import { stripeWebhookHandler } from './app/webhook/webhook.stripe';
 
 const app: Application = express();
 
-
+app.post(
+  '/api/v1/bookings/webhook',
+  express.raw({ type: 'application/json' }), 
+  stripeWebhookHandler
+);
 
 
 // Now apply JSON parser for all other routes
@@ -41,11 +45,7 @@ app.use(
   })
 );
 
-app.post(
-  '/api/v1/bookings/webhook',
-  express.raw({ type: 'application/json' }), 
-  stripeWebhookHandler
-);
+
 
 app.use(morgan('dev'));
 app.use('/api/v1', router);

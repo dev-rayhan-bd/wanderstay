@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const createBookingZodSchema = z.object({
-  body: z.object({
+
     guestDetails: z.object({
       firstName: z.string().min(1, 'First name is required'),
       lastName: z.string().min(1, 'Last name is required'),
@@ -23,7 +23,7 @@ const createBookingZodSchema = z.object({
     checkOut: z.string(),
     adults: z.number(),
     totalAmount: z.number(),
-  }),
+
 });
 
 export const BookingValidations = { createBookingZodSchema };

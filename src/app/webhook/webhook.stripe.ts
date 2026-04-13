@@ -26,28 +26,29 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
     if (booking) {
       try {
         // ২. সাপ্লায়ারের (WebBeds) কনফার্মেশন কল করা
-        const supplierRes = await SupplierService.callWebBeds('confirmbooking', {
-          bookingDetails: {
-            fromDate: booking.checkIn,
-            toDate: booking.checkOut,
-            currency: "520",
-            productId: booking.hotelInfo.hotelId,
-            rooms: {
-              $: { no: "1" },
-              room: {
-                $: { runno: "0" },
-                roomTypeCode: booking.roomInfo.roomTypeCode,
-                selectedRateBasis: booking.roomInfo.rateBasisId,
-                adultsCode: booking.adults,
-                // গেস্টের নাম সাপ্লায়ারকে পাঠানো
-                passengerName: {
-                    firstName: booking.guestDetails.firstName,
-                    lastName: booking.guestDetails.lastName
-                }
-              }
-            }
-          }
-        });
+// src/app/webhook/webhook.stripe.ts এর ভেতরে
+
+const supplierRes = await SupplierService.callWebBeds('confirmbooking', {
+  bookingDetails: {
+    fromDate: booking.checkIn,
+    toDate: booking.checkOut,
+    currency: config.dotw.currency, // "520"
+    rooms: {
+      $: { no: "1" },
+      room: {
+        $: { runno: "0" },
+        roomTypeCode: booking.roomInfo.roomTypeCode,
+        selectedRateBasis: booking.roomInfo.rateBasisId,
+        adultsCode: booking.adults,
+        passengerName: {
+          firstName: booking.guestDetails.firstName,
+          lastName: booking.guestDetails.lastName
+        }
+      }
+    },
+    productId: booking.hotelInfo.hotelId // এটি rooms এর পরে থাকবে (XSD নিয়ম)
+  }
+});
 
         if (supplierRes.result?.successful === "TRUE") {
           // ✅ সাপ্লায়ার ওকে বলেছে! এখন টাকা ক্যাপচার করুন
