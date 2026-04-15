@@ -15,12 +15,12 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
     return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
-  // যখন পেমেন্ট Authorized হবে
+
   if (event.type === 'payment_intent.amount_capturable_updated') {
     const paymentIntent = event.data.object as any;
     const paymentIntentId = paymentIntent.id;
 
-    // ১. ডাটাবেস থেকে বুকিং ডাটা খুঁজে বের করা
+ 
     const booking = await BookingModel.findOne({ paymentIntentId });
 
     if (booking) {
@@ -49,8 +49,24 @@ const supplierRes = await SupplierService.callWebBeds('confirmbooking', {
     productId: booking.hotelInfo.hotelId // এটি rooms এর পরে থাকবে (XSD নিয়ম)
   }
 });
+//real response এ supplierRes.result.successful === "TRUE" 
+        // if (supplierRes.result?.successful === "TRUE") {
+        //   // ✅ সাপ্লায়ার ওকে বলেছে! এখন টাকা ক্যাপচার করুন
+        //   await stripe.paymentIntents.capture(paymentIntentId);
+          
+        //   await BookingModel.findOneAndUpdate(
+        //     { paymentIntentId },
+        //     { 
+        //       status: 'Confirmed', 
+        //       paymentStatus: 'Captured',
+        //       supplierReference: supplierRes.result.bookingReference 
+        //     }
+        //   );
+        //   console.log("✅ Booking & Payment Success!");
+        // } 
 
-        if (supplierRes.result?.successful === "TRUE") {
+        //mocking supplier response for testing
+        if (true) {
           // ✅ সাপ্লায়ার ওকে বলেছে! এখন টাকা ক্যাপচার করুন
           await stripe.paymentIntents.capture(paymentIntentId);
           
@@ -63,7 +79,10 @@ const supplierRes = await SupplierService.callWebBeds('confirmbooking', {
             }
           );
           console.log("✅ Booking & Payment Success!");
-        } else {
+        } 
+        
+        
+        else {
           // ❌ সাপ্লায়ার ফেইল! টাকা কাস্টমারকে ফেরত দিন (Rollback)
           await stripe.paymentIntents.cancel(paymentIntentId);
           await BookingModel.findOneAndUpdate(
