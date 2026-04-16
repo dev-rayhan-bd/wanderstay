@@ -1,4 +1,5 @@
 import config from '../../config';
+import { calculateFinalPrice } from '../../utils/priceCalculator';
 import { SupplierService } from '../Supplier/supplier.service';
 import { THotelSearchRequest, TRoomRequest } from './hotel.interface';
 
@@ -19,14 +20,14 @@ const searchHotels = async (payload: THotelSearchRequest) => {
   return hotelList.map((hotel: any) => {
     const attrs = hotel.$ || {};
     
-    // ১. ইমেজ এক্সট্রাকশন
+
     let imageUrl = "https://images.unsplash.com/photo-1566073771259-6a8506099945?q=80&w=1000";
     if (hotel.hotelImages?.hotelImage) {
       const img = Array.isArray(hotel.hotelImages.hotelImage) ? hotel.hotelImages.hotelImage[0] : hotel.hotelImages.hotelImage;
       imageUrl = img.$?.url || img.url || imageUrl;
     }
 
-    // ২. দাম বের করার নিরাপদ উপায় (Fix for NaN)
+ 
     let price = "450";
     try {
       const room = hotel.rooms?.room;
@@ -35,9 +36,9 @@ const searchHotels = async (payload: THotelSearchRequest) => {
       const total = rateObj?._ || rateObj?.total?._ || rateObj?.total || rateObj?.$?.total;
       if (total) price = Math.ceil(parseFloat(total)).toString();
     } catch (e) {
-      console.log("Price Error for:", attrs.hotelid);
+      console.log("Price Error for:", attrs.hotelid); 
     }
-
+  const priceInfo = calculateFinalPrice(price);
     return {
       id: attrs.hotelid || hotel.hotelid,
       name: attrs.hotelName || hotel.hotelName || "Luxury Stay",
@@ -45,7 +46,7 @@ const searchHotels = async (payload: THotelSearchRequest) => {
       location: attrs.address || hotel.address || "City Center",
       rating: attrs.rating || hotel.rating || "4.0",
       image: imageUrl,
-      price: price,
+      price:priceInfo.finalPrice.toString(),
       tag: parseFloat(attrs.rating || hotel.rating) >= 4.5 ? "Top Rated" : "Best Seller",
       propertyType: attrs.propertyType || hotel.propertyType || "Hotel"
     };
@@ -72,10 +73,11 @@ const getRooms = async (payload: TRoomRequest) => {
     
     return rateBases.map((rb: any) => {
       const totalPrice = rb.total?._ || rb.total || "0";
+        const priceInfo = calculateFinalPrice(totalPrice);
       return {
         roomTypeCode: rt.roomtypecode || rt.$?.roomtypecode,
         name: rt.name || rt.$?.name,
-        price: Math.ceil(parseFloat(totalPrice)).toString(),
+        price: priceInfo.finalPrice.toString(),
         currency: "USD",
         mealPlan: rb.description || "Room Only",
         maxAdults: rt.roomInfo?.maxAdult || "2",

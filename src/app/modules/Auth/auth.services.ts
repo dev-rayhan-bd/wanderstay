@@ -14,6 +14,8 @@ import { sendMail } from "../../utils/sendMail";
 import config from "../../config";
 import { sendNotificationToAdmins } from "../../utils/sendNotification";
 
+
+
 // register new user
 const registeredUserIntoDB = async (payload: TUser) => {
   const existing = await UserModel.isUserExistsByEmail(payload.email);

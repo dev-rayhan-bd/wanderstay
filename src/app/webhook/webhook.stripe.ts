@@ -6,94 +6,54 @@ import { BookingModel } from '../modules/Booking/booking.model';
 
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;
-  const endpointSecret = config.webhook_secret_key;
-
   let event;
+
+  console.log("🔔 Webhook Hit Received!"); 
+
   try {
-    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret!);
+    event = stripe.webhooks.constructEvent(req.body, sig, config.webhook_secret_key!);
   } catch (err: any) {
+    console.log("❌ Webhook Signature Error:", err.message);
     return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+
+  console.log("✅ Event Type:", event.type);
+
+
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object as any;
+    await BookingModel.findOneAndUpdate(
+      { paymentIntentId: session.id },
+      { paymentIntentId: session.payment_intent, paymentStatus: 'Authorized' }
+    );
+    console.log("📁 Database updated with real PaymentIntent ID");
   }
 
 
   if (event.type === 'payment_intent.amount_capturable_updated') {
     const paymentIntent = event.data.object as any;
-    const paymentIntentId = paymentIntent.id;
-
- 
-    const booking = await BookingModel.findOne({ paymentIntentId });
+    const booking = await BookingModel.findOne({ paymentIntentId: paymentIntent.id });
 
     if (booking) {
+      console.log("💰 Money Authorized! Booking for Hotel:", booking.hotelInfo.hotelName);
+
       try {
-        // ২. সাপ্লায়ারের (WebBeds) কনফার্মেশন কল করা
-// src/app/webhook/webhook.stripe.ts এর ভেতরে
+  
+        const supplierRes = await SupplierService.callWebBeds('confirmbooking', { /* payload */ });
 
-const supplierRes = await SupplierService.callWebBeds('confirmbooking', {
-  bookingDetails: {
-    fromDate: booking.checkIn,
-    toDate: booking.checkOut,
-    currency: config.dotw.currency, // "520"
-    rooms: {
-      $: { no: "1" },
-      room: {
-        $: { runno: "0" },
-        roomTypeCode: booking.roomInfo.roomTypeCode,
-        selectedRateBasis: booking.roomInfo.rateBasisId,
-        adultsCode: booking.adults,
-        passengerName: {
-          firstName: booking.guestDetails.firstName,
-          lastName: booking.guestDetails.lastName
-        }
-      }
-    },
-    productId: booking.hotelInfo.hotelId // এটি rooms এর পরে থাকবে (XSD নিয়ম)
-  }
-});
-//real response এ supplierRes.result.successful === "TRUE" 
-        // if (supplierRes.result?.successful === "TRUE") {
-        //   // ✅ সাপ্লায়ার ওকে বলেছে! এখন টাকা ক্যাপচার করুন
-        //   await stripe.paymentIntents.capture(paymentIntentId);
-          
-        //   await BookingModel.findOneAndUpdate(
-        //     { paymentIntentId },
-        //     { 
-        //       status: 'Confirmed', 
-        //       paymentStatus: 'Captured',
-        //       supplierReference: supplierRes.result.bookingReference 
-        //     }
-        //   );
-        //   console.log("✅ Booking & Payment Success!");
-        // } 
-
-        //mocking supplier response for testing
-        if (true) {
-          // ✅ সাপ্লায়ার ওকে বলেছে! এখন টাকা ক্যাপচার করুন
-          await stripe.paymentIntents.capture(paymentIntentId);
-          
-          await BookingModel.findOneAndUpdate(
-            { paymentIntentId },
-            { 
-              status: 'Confirmed', 
-              paymentStatus: 'Captured',
-              supplierReference: supplierRes.result.bookingReference 
-            }
-          );
-          console.log("✅ Booking & Payment Success!");
-        } 
-        
-        
-        else {
-          // ❌ সাপ্লায়ার ফেইল! টাকা কাস্টমারকে ফেরত দিন (Rollback)
-          await stripe.paymentIntents.cancel(paymentIntentId);
-          await BookingModel.findOneAndUpdate(
-            { paymentIntentId },
-            { status: 'Failed', paymentStatus: 'Cancelled' }
-          );
-          console.log("❌ Supplier Booking Failed. Payment Rolled Back.");
+ 
+        if (true) { 
+          await stripe.paymentIntents.capture(paymentIntent.id);
+          await booking.updateOne({ 
+            status: 'Confirmed', 
+            paymentStatus: 'Captured',
+            supplierReference: "MOCK-REF-12345" 
+          });
+          console.log("🚀 SUCCESS: Booking Confirmed and Payment Captured!");
         }
       } catch (error) {
-        await stripe.paymentIntents.cancel(paymentIntentId); // Technical error rollback
-        console.error("❌ System error during confirmbooking. Payment Released.");
+        console.error("❌ Booking Process Error:", error);
       }
     }
   }

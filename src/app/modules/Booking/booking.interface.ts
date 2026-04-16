@@ -4,7 +4,7 @@ export type TBookingStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Failed';
 export type TPaymentStatus = 'Unpaid' | 'Authorized' | 'Captured' | 'Cancelled';
 
 export interface TBooking {
-  user?: Types.ObjectId; // রেজিস্টার্ড ইউজার হলে
+  user?: Types.ObjectId;
   guestDetails: {
     firstName: string;
     lastName: string;
