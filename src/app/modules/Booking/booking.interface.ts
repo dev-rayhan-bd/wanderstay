@@ -1,7 +1,7 @@
-import { Types } from 'mongoose';
+import { Types } from "mongoose";
 
-export type TBookingStatus = 'Pending' | 'Confirmed' | 'Cancelled' | 'Failed';
-export type TPaymentStatus = 'Unpaid' | 'Authorized' | 'Captured' | 'Cancelled';
+export type TBookingStatus = "Pending" | "Confirmed" | "Cancelled" | "Failed";
+export type TPaymentStatus = "Unpaid" | "Authorized" | "Captured" | "Cancelled";
 
 export interface TBooking {
   user?: Types.ObjectId;
@@ -14,6 +14,8 @@ export interface TBooking {
   hotelInfo: {
     hotelId: string;
     hotelName: string;
+    hotelImage?: string;
+    address?: string;
     city: string;
   };
   roomInfo: {

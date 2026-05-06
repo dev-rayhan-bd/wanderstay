@@ -3,6 +3,7 @@ import { BookingModel } from './booking.model';
 import config from '../../config';
 import { calculateFinalPrice } from '../../utils/priceCalculator';
 import { TBooking } from './booking.interface';
+import QueryBuilder from '../../builder/QueryBuilder';
 // src/app/modules/Booking/booking.service.ts
 
 const initiateBookingInDB = async (payload: TBooking, userId: string) => {
@@ -52,4 +53,29 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
   return { paymentUrl: session.url };
 };
 
-export const BookingService = { initiateBookingInDB };
+
+
+const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
+  const bookingQuery = new QueryBuilder(
+    BookingModel.find({ user: userId }), 
+    query
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await bookingQuery.modelQuery;
+  const meta = await bookingQuery.countTotal();
+
+  return { result, meta };
+};
+
+
+
+
+
+
+
+
+export const BookingService = { initiateBookingInDB, getMyBookingsFromDB };

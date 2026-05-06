@@ -35,27 +35,71 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
     const paymentIntent = event.data.object as any;
     const booking = await BookingModel.findOne({ paymentIntentId: paymentIntent.id });
 
-    if (booking) {
-      console.log("💰 Money Authorized! Booking for Hotel:", booking.hotelInfo.hotelName);
 
-      try {
-  
-        const supplierRes = await SupplierService.callWebBeds('confirmbooking', { /* payload */ });
 
- 
-        if (true) { 
-          await stripe.paymentIntents.capture(paymentIntent.id);
-          await booking.updateOne({ 
-            status: 'Confirmed', 
-            paymentStatus: 'Captured',
-            supplierReference: "MOCK-REF-12345" 
-          });
-          console.log("🚀 SUCCESS: Booking Confirmed and Payment Captured!");
-        }
-      } catch (error) {
-        console.error("❌ Booking Process Error:", error);
+
+if (booking) {
+  console.log("💰 Money Authorized! Booking for Hotel:", booking.hotelInfo.hotelName);
+
+  try {
+
+    const supplierPayload = {
+      bookingDetails: {
+        fromDate: booking.checkIn,
+        toDate: booking.checkOut,
+        currency: config.dotw.currency, // "520"
+        rooms: {
+          $: { no: "1" },
+          room: {
+            $: { runno: "0" },
+            roomTypeCode: booking.roomInfo.roomTypeCode,
+            selectedRateBasis: booking.roomInfo.rateBasisId,
+            adultsCode: booking.adults,
+            passengerName: {
+              firstName: booking.guestDetails.firstName,
+              lastName: booking.guestDetails.lastName
+            }
+          }
+        },
+        productId: booking.hotelInfo.hotelId 
       }
+    };
+
+  
+    const supplierRes = await SupplierService.callWebBeds('confirmbooking', supplierPayload);
+
+
+    if (true) { 
+      await stripe.paymentIntents.capture(paymentIntent.id);
+      
+      //when live, replace "MOCK-REF-12345" with actual reference from supplierRes
+      const realRef = supplierRes?.result?.bookingReference || "MOCK-REF-12345";
+
+      await booking.updateOne({ 
+        status: 'Confirmed', 
+        paymentStatus: 'Captured',
+        supplierReference: realRef 
+      });
+      console.log("🚀 SUCCESS: Booking Confirmed and Payment Captured!");
     }
+  } catch (error) {
+ 
+    await stripe.paymentIntents.cancel(paymentIntent.id);
+    await booking.updateOne({ status: 'Failed', paymentStatus: 'Cancelled' });
+    console.error("❌ Booking Process Error. Transaction Rolled Back.");
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
   }
 
   res.json({ received: true });

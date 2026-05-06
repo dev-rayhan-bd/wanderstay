@@ -1,5 +1,5 @@
 import { z } from "zod";
-
+// Validation schemas for authentication-related operations
 const emailSchema = z
   .string({ message: "Email is required" })
   .trim()

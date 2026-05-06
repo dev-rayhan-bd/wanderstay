@@ -13,6 +13,8 @@ const bookingSchema = new Schema<TBooking>(
     hotelInfo: {
       hotelId: { type: String, required: true },
       hotelName: { type: String, required: true },
+       hotelImage: String, 
+  address: String,
       city: { type: String, required: true },
     },
     roomInfo: {
