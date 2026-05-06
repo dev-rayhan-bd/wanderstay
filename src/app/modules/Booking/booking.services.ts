@@ -101,26 +101,65 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
 
 
 
-const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
-  const currentDate = new Date().toISOString().split('T')[0];  //(YYYY-MM-DD)
+// const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
+//   const currentDate = new Date().toISOString().split('T')[0];  //(YYYY-MM-DD)
   
+//   let criteria: any = { user: userId };
+
+//   // 'type' wise filtering: active, history, all
+//   if (query.view === 'active') {
+//   //active : confirmed and check-out date not passed yet
+//     criteria.status = 'Confirmed';
+//     criteria.checkOut = { $gte: currentDate };
+//   } 
+//   else if (query.view === 'history') {
+//    //history: either cancelled/failed or check-out date passed
+//     criteria.$or = [
+//       { status: { $in: ['Cancelled', 'Failed'] } },
+//       { checkOut: { $lt: currentDate } }
+//     ];
+//   }
+
+//   const bookingQuery = new QueryBuilder(BookingModel.find(criteria), query)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
+
+//   const result = await bookingQuery.modelQuery;
+//   const meta = await bookingQuery.countTotal();
+
+//   return { result, meta };
+// };
+
+
+// src/app/modules/Booking/booking.service.ts
+
+const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
+  const currentDate = new Date().toISOString().split('T')[0];
+  
+
+  const queryObj = { ...query };
+  const view = queryObj.view;
+  delete queryObj.view; 
+
   let criteria: any = { user: userId };
 
-  // 'type' wise filtering: active, history, all
-  if (query.view === 'active') {
-  //active : confirmed and check-out date not passed yet
+  if (view === 'active') {
+
     criteria.status = 'Confirmed';
     criteria.checkOut = { $gte: currentDate };
   } 
-  else if (query.view === 'history') {
-   //history: either cancelled/failed or check-out date passed
+  else if (view === 'history') {
+
     criteria.$or = [
       { status: { $in: ['Cancelled', 'Failed'] } },
       { checkOut: { $lt: currentDate } }
     ];
   }
 
-  const bookingQuery = new QueryBuilder(BookingModel.find(criteria), query)
+
+  const bookingQuery = new QueryBuilder(BookingModel.find(criteria), queryObj)
     .filter()
     .sort()
     .paginate()
@@ -131,9 +170,6 @@ const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown
 
   return { result, meta };
 };
-
-
-
 
 
 
