@@ -20,4 +20,10 @@ router.get(
   BookingControllers.getMyBookings
 );
 
+router.patch(
+  '/cancel/:id',
+  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingControllers.cancelBooking
+);
+
 export const BookingRoutes = router;

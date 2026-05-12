@@ -4,6 +4,7 @@ import config from '../../config';
 import { calculateFinalPrice } from '../../utils/priceCalculator';
 import { TBooking } from './booking.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
+import { SupplierService } from '../Supplier/supplier.service';
 // src/app/modules/Booking/booking.service.ts
 
 // const initiateBookingInDB = async (payload: TBooking, userId: string) => {
@@ -100,27 +101,31 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
 };
 
 
-
 // const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
-//   const currentDate = new Date().toISOString().split('T')[0];  //(YYYY-MM-DD)
+//   const currentDate = new Date().toISOString().split('T')[0];
   
+
+//   const queryObj = { ...query };
+//   const view = queryObj.view;
+//   delete queryObj.view; 
+
 //   let criteria: any = { user: userId };
 
-//   // 'type' wise filtering: active, history, all
-//   if (query.view === 'active') {
-//   //active : confirmed and check-out date not passed yet
+//   if (view === 'active') {
+
 //     criteria.status = 'Confirmed';
 //     criteria.checkOut = { $gte: currentDate };
 //   } 
-//   else if (query.view === 'history') {
-//    //history: either cancelled/failed or check-out date passed
+//   else if (view === 'history') {
+
 //     criteria.$or = [
 //       { status: { $in: ['Cancelled', 'Failed'] } },
 //       { checkOut: { $lt: currentDate } }
 //     ];
 //   }
 
-//   const bookingQuery = new QueryBuilder(BookingModel.find(criteria), query)
+
+//   const bookingQuery = new QueryBuilder(BookingModel.find(criteria), queryObj)
 //     .filter()
 //     .sort()
 //     .paginate()
@@ -133,15 +138,12 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
 // };
 
 
-// src/app/modules/Booking/booking.service.ts
-
 const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown>) => {
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = new Date().toISOString().split('T')[0]; 
   
-
   const queryObj = { ...query };
   const view = queryObj.view;
-  delete queryObj.view; 
+  delete queryObj.view;
 
   let criteria: any = { user: userId };
 
@@ -154,10 +156,9 @@ const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown
 
     criteria.$or = [
       { status: { $in: ['Cancelled', 'Failed'] } },
-      { checkOut: { $lt: currentDate } }
+      { checkOut: { $lt: currentDate } }       
     ];
   }
-
 
   const bookingQuery = new QueryBuilder(BookingModel.find(criteria), queryObj)
     .filter()
@@ -172,7 +173,66 @@ const getMyBookingsFromDB = async (userId: string, query: Record<string, unknown
 };
 
 
+const checkCancellationPenalty = async (id: string) => {
+  const booking = await BookingModel.findById(id);
+  if (!booking) throw new Error("Booking not found");
+
+ 
+  const response = await SupplierService.callWebBeds('cancelbooking', {
+    bookingDetails: {
+      bookingCode: booking.supplierReference,
+      confirm: "no" 
+    }
+  });
+
+  return response.result; 
+};
 
 
 
-export const BookingService = { initiateBookingInDB, getMyBookingsFromDB };
+const cancelBookingFromDB = async (bookingId: string) => {
+  const booking = await BookingModel.findById(bookingId);
+
+  if (!booking) {
+    throw new Error("Booking not found!");
+  }
+
+  if (booking.status === 'Cancelled') {
+    throw new Error("Booking is already cancelled.");
+  }
+
+  const supplierRes = await SupplierService.callWebBeds('cancelbooking', {
+    bookingDetails: {
+      bookingCode: booking.supplierReference, 
+      confirm: "yes" 
+    }
+  });
+
+  if (supplierRes.result?.successful === "TRUE") {
+   
+    const refund = await stripe.refunds.create({
+      payment_intent: booking.paymentIntentId,
+    });
+
+  
+    const result = await BookingModel.findByIdAndUpdate(
+      bookingId,
+      { 
+        status: 'Cancelled', 
+        paymentStatus: 'Cancelled' 
+      },
+      { new: true }
+    );
+
+    return {
+      booking: result,
+      refundId: refund.id,
+      supplierMessage: "Cancelled Successfully"
+    };
+  } else {
+    throw new Error(supplierRes.result?.error?.details || "Supplier refused cancellation");
+  }
+};
+
+
+export const BookingService = { initiateBookingInDB, getMyBookingsFromDB, cancelBookingFromDB };

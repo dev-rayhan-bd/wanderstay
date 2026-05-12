@@ -35,5 +35,15 @@ const getMyBookings = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const cancelBooking = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params; 
+  const result = await BookingService.cancelBookingFromDB(id as string);
 
-export const BookingControllers = { createBooking, getMyBookings }; 
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Booking cancelled and refund processed successfully',
+    data: result,
+  });
+});
+export const BookingControllers = { createBooking, getMyBookings, cancelBooking };

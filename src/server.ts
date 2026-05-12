@@ -3,7 +3,8 @@ import app from './app';
 import mongoose from 'mongoose';
 import config from './app/config';
 import cron from 'node-cron';
-import { DestinationControllers } from './app/modules/Destination/destination.controller';
+
+import { DestinationService } from './app/modules/Destination/destination.services';
 
 
 let server: Server;
@@ -19,7 +20,7 @@ async function main() {
     cron.schedule('0 0 * * 0', async () => {
       try {
         console.log('⏳ Running automated global city sync...');
-        await DestinationControllers.syncEverythingDynamically();
+      await DestinationService.syncEverythingDynamically(); 
         console.log('✅ Global city sync completed successfully.');
       } catch (error) {
         console.error('❌ Cron Job Error:', error);
@@ -31,7 +32,7 @@ async function main() {
     if (cityCount === 0) {
       console.log('ℹ️ DB is empty. Running initial sync...');
 
-      DestinationControllers.syncEverythingDynamically(); 
+       await DestinationService.syncEverythingDynamically(); 
     }
 
     server.listen(Number(config.port), "0.0.0.0", () => {
