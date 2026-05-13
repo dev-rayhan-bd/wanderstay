@@ -5,6 +5,7 @@ import { calculateFinalPrice } from '../../utils/priceCalculator';
 import { TBooking } from './booking.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { SupplierService } from '../Supplier/supplier.service';
+import { sendCancellationEmail } from '../../utils/sendEmail';
 
 const initiateBookingInDB = async (payload: TBooking, userId: string) => {
 
@@ -147,7 +148,7 @@ const confirmCancellationInDB = async (id: string) => {
       { status: 'Cancelled', paymentStatus: 'Cancelled' },
       { new: true }
     );
-
+ await sendCancellationEmail(booking.guestDetails.email, booking);
     return result;
   } else {
     throw new Error("Supplier refused cancellation. Please contact support.");

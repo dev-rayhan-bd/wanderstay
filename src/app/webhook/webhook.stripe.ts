@@ -3,7 +3,8 @@ import { stripe } from '../utils/stripeClient';
 import config from '../config';
 import { SupplierService } from '../modules/Supplier/supplier.service';
 import { BookingModel } from '../modules/Booking/booking.model';
-import { sendBookingEmail } from '../utils/sendBookingEmail';
+import { sendBookingEmail } from '../utils/sendEmail';
+
 
 export const stripeWebhookHandler = async (req: Request, res: Response) => {
   const sig = req.headers['stripe-signature'] as string;

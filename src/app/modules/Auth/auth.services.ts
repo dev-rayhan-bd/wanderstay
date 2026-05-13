@@ -10,9 +10,9 @@ import bcrypt from "bcrypt";
 import { TUser } from "../User/user.interface";
 import { UserModel } from "../User/user.model";
 import { generateReferCode } from "../../utils/generateReferCode";
-import { sendMail } from "../../utils/sendMail";
 import config from "../../config";
 import { sendNotificationToAdmins } from "../../utils/sendNotification";
+import { sendOTPEmail } from "../../utils/sendEmail";
 
 
 
@@ -43,13 +43,8 @@ payload.fullName=fullName
 
   const user = await UserModel.create(newUserData);
 
-  // Send OTP email
-  await sendMail(
-    payload.email,
-    "Your OTP Code",
-    `Your OTP code is: ${otp}. It will expire in 1 minute.`
-  );
-
+ 
+await sendOTPEmail(payload.email, otp);
   return {
     result: user,
   };
@@ -148,12 +143,8 @@ const resendOTP = async (email: string) => {
     },
   });
 
-  await sendMail(
-    email,
-    "Your New OTP Code",
-    `Your new OTP code is: ${otp}. It will expire in 1 minute.`
-  );
-
+ 
+await sendOTPEmail(email, otp);
   return {
     message: "OTP sent successfully!",
   };
@@ -415,15 +406,11 @@ export const forgotPass = async (email: string) => {
     expireDate: new Date(Date.now() + 1 * 60 * 1000), // 1 minute expiry
   };
 
-  // 3. Save user to trigger pre-save hook (which hashes the OTP)
+  // 3. Save user to trigger pre-save hook (which hashes the OTP) 
   await user.save();
 
   // 4. Send email
-  await sendMail(
-    email,
-    "Your OTP Code",
-    `Your OTP code is: ${otp}. It will expire in 1 minute.`
-  );
+await sendOTPEmail(email, otp);
 };
 export const verifyOTP = async (email: string, otp: string) => {
   const user = await UserModel.findOne({ email });
