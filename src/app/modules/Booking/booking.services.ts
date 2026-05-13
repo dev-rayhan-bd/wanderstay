@@ -155,7 +155,29 @@ const confirmCancellationInDB = async (id: string) => {
 };
 
 
+const getAdminStats = async () => {
+  const totalBookings = await BookingModel.countDocuments({ status: 'Confirmed' });
+  
+
+  const stats = await BookingModel.aggregate([
+    { $match: { status: 'Confirmed' } },
+    {
+      $group: {
+        _id: null,
+        totalRevenue: { $sum: "$totalAmount" },
+ 
+        totalProfit: { $sum: { $multiply: ["$totalAmount", 0.10] } } // Let's assume 10% profit margin for simplicity
+      }
+    }
+  ]);
+
+  return {
+    totalBookings,
+    totalRevenue: stats[0]?.totalRevenue || 0,
+    totalProfit: stats[0]?.totalProfit || 0,
+    activeHotels: 155 // Number of active hotels
+  };
+}; 
 
 
-
-export const BookingService = { initiateBookingInDB, getMyBookingsFromDB,getCancellationQuote, confirmCancellationInDB };
+export const BookingService = { initiateBookingInDB, getMyBookingsFromDB,getCancellationQuote, confirmCancellationInDB,getAdminStats };
