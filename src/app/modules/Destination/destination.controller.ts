@@ -33,10 +33,9 @@ const syncEverythingDynamically = catchAsync(async (req: Request, res: Response)
 const searchDestinations = catchAsync(async (req: Request, res: Response) => {
   const query = { ...req.query };
 
-  // যদি ইউজার 'q' পাঠিয়ে থাকে (যেমন: ?q=ba)
   if (query.q) {
-    query.search = query.q; // কুয়েরি বিল্ডারের জন্য 'search' এ ভ্যালু সেট করলাম
-    delete query.q;        // অরিজিনাল 'q' ডিলিট করলাম যাতে filter() এ সমস্যা না হয়
+    query.search = query.q; 
+    delete query.q;       
   }
 
   const result = await DestinationService.searchDestinationsFromDB(query);
@@ -51,11 +50,35 @@ const searchDestinations = catchAsync(async (req: Request, res: Response) => {
 
 const searchCities = searchDestinations;
 
+const markPopular = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await DestinationService.updatePopularStatusInDB(id as string, req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Destination popularity updated successfully",
+    data: result,
+  });
+});
+
+const getPopular = catchAsync(async (req: Request, res: Response) => {
+  const result = await DestinationService.getPopularDestinationsFromDB(req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Popular destinations fetched successfully",
+    data: result,
+  });
+});
 
 
 export const DestinationControllers = { 
   syncAllDestinations, 
   syncEverythingDynamically, 
   searchCities, 
-  searchDestinations 
+  searchDestinations ,
+  markPopular,
+  getPopular
 };

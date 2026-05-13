@@ -23,5 +23,22 @@ const getHotelRooms = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const toggleFeatured = catchAsync(async (req, res) => {
+  const result = await HotelService.toggleFeaturedHotelInDB(req.body);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Hotel featured status updated",
+    data: result
+  });
+});
 
-export const HotelControllers = { searchHotels, getHotelRooms };
+const getFeatured = catchAsync(async (req, res) => {
+  const result = await HotelService.getFeaturedHotelsFromDB();
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    data: result
+  });
+});
+export const HotelControllers = { searchHotels, getHotelRooms, toggleFeatured, getFeatured };

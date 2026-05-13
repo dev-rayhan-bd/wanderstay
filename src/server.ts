@@ -5,6 +5,7 @@ import config from './app/config';
 import cron from 'node-cron';
 
 import { DestinationService } from './app/modules/Destination/destination.services';
+import { seedSuperAdmin } from './app/utils/seedSuperAdmin';
 
 
 let server: Server;
@@ -13,7 +14,7 @@ async function main() {
   try {
     await mongoose.connect(config.database_url as string);
     console.log('✅ Connected to MongoDB');
-
+ await seedSuperAdmin(); 
     server = createServer(app);
 
     // auto sync every Sunday at midnight

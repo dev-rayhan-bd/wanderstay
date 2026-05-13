@@ -40,6 +40,10 @@ const bookingSchema = new Schema<TBooking>(
       enum: ['Unpaid', 'Authorized', 'Captured', 'Cancelled'],
       default: 'Unpaid',
     },
+  
+
+supplierPrice: { type: Number, required: true }, 
+platformProfit: { type: Number, required: true }, 
   },
   { timestamps: true }
 );

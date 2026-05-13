@@ -56,4 +56,28 @@ const confirmCancel = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-export const BookingControllers = { createBooking, getMyBookings, getCancelQuote, confirmCancel };
+const getAdminStats = catchAsync(async (req: Request, res: Response) => {
+  const result = await BookingService.getAdminDashboardStats();
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'Admin dashboard stats retrieved successfully',
+    data: result,
+  });
+});
+
+
+const getAllBookings = catchAsync(async (req: Request, res: Response) => {
+  const result = await BookingService.getAllBookingsFromDB(req.query);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: 'All bookings retrieved successfully',
+    data: result,
+  });
+});
+
+
+export const BookingControllers = { createBooking, getMyBookings, getCancelQuote, confirmCancel, getAdminStats, getAllBookings };

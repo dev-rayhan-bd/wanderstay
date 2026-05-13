@@ -90,8 +90,38 @@ const searchDestinationsFromDB = async (query: Record<string, unknown>) => {
   return { result, meta };
 };
 
+const updatePopularStatusInDB = async (id: string, payload: { isPopular: boolean; image?: string }) => {
+  const result = await DestinationModel.findByIdAndUpdate(
+    id,
+    { 
+      isPopular: payload.isPopular, 
+      image: payload.image 
+    },
+    { new: true, runValidators: true }
+  );
+  return result;
+};
+
+
+const getPopularDestinationsFromDB = async (query: Record<string, unknown>) => {
+  const popularQuery = new QueryBuilder(
+    DestinationModel.find({ isPopular: true }), 
+    query
+  )
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await popularQuery.modelQuery;
+  const meta = await popularQuery.countTotal();
+
+  return { result, meta };
+};
 export const DestinationService = { 
   syncAllDestinationsFromSupplier, 
   syncEverythingDynamically, 
-  searchDestinationsFromDB 
+  searchDestinationsFromDB ,
+  getPopularDestinationsFromDB,
+  updatePopularStatusInDB
 };

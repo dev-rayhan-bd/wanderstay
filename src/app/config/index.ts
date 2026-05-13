@@ -22,11 +22,15 @@ export default {
   cloudinary_cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   cloudinary_api_key: process.env.CLOUDINARY_API_KEYS,
   cloudinary_api_secret: process.env.CLOUDINARY_SECRET_KEYS,
-   dotw: {
+  dotw: {
     username: process.env.DOTW_USER,
     password: process.env.DOTW_PASS,
     id: process.env.DOTW_ID,
     currency: process.env.DOTW_CURRENCY || "520",
     url: process.env.DOTW_URL,
-  }
+  },
+  // seed supoeradmin credentials
+  super_admin_email: process.env.SUPER_ADMIN_EMAIL,
+  super_admin_password: process.env.SUPER_ADMIN_PASSWORD,
+  super_admin_contact: process.env.SUPER_ADMIN_CONTACT,
 };

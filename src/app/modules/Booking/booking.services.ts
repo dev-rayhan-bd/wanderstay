@@ -44,7 +44,9 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
   await BookingModel.create({
     ...payload,
     user: userId,
-    totalAmount: priceInfo.finalPrice, 
+
+  supplierPrice: priceInfo.originalPrice, 
+  platformProfit: priceInfo.markupAmount, 
     paymentIntentId: session.id,       // session id (cs) replaced with real PaymentIntent ID in webhook (pi)
     status: 'Pending',
     paymentStatus: 'Unpaid',
@@ -156,29 +158,45 @@ const confirmCancellationInDB = async (id: string) => {
 };
 
 
-const getAdminStats = async () => {
-  const totalBookings = await BookingModel.countDocuments({ status: 'Confirmed' });
-  
-
+const getAdminDashboardStats = async () => {
   const stats = await BookingModel.aggregate([
-    { $match: { status: 'Confirmed' } },
+    { 
+      $match: { status: 'Confirmed' } 
+    },
     {
       $group: {
         _id: null,
-        totalRevenue: { $sum: "$totalAmount" },
- 
-        totalProfit: { $sum: { $multiply: ["$totalAmount", 0.10] } } // Let's assume 10% profit margin for simplicity
+        totalBookings: { $sum: 1 },
+        totalRevenue: { $sum: "$totalAmount" },   
+        totalNetProfit: { $sum: "$platformProfit" }, 
+        totalSupplierCost: { $sum: "$supplierPrice" } 
       }
     }
   ]);
 
   return {
-    totalBookings,
+    totalBookings: stats[0]?.totalBookings || 0,
     totalRevenue: stats[0]?.totalRevenue || 0,
-    totalProfit: stats[0]?.totalProfit || 0,
-    activeHotels: 155 // Number of active hotels
+    totalProfit: stats[0]?.totalNetProfit || 0,
+    supplierPayable: stats[0]?.totalSupplierCost || 0,
+    activeHotels: 161
   };
-}; 
+};
 
+const getAllBookingsFromDB = async (query: Record<string, unknown>) => {
+  const bookingQuery = new QueryBuilder(BookingModel.find().populate('user'), query)
+    .search(['hotelInfo.hotelName', 'guestDetails.firstName', 'guestDetails.email', 'supplierReference'])
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
 
-export const BookingService = { initiateBookingInDB, getMyBookingsFromDB,getCancellationQuote, confirmCancellationInDB,getAdminStats };
+  const result = await bookingQuery.modelQuery;
+  const meta = await bookingQuery.countTotal();
+
+  return { result, meta };
+};
+
+ 
+
+export const BookingService = { initiateBookingInDB, getMyBookingsFromDB,getCancellationQuote, confirmCancellationInDB,getAdminDashboardStats, getAllBookingsFromDB };

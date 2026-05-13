@@ -33,4 +33,7 @@ export interface TBooking {
   supplierReference?: string; // WebBeds ID
   status: TBookingStatus;
   paymentStatus: TPaymentStatus;
+    supplierPrice: number;
+    platformProfit: number;
+
 }

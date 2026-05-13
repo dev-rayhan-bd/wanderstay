@@ -1,6 +1,7 @@
 import config from '../../config';
 import { calculateFinalPrice } from '../../utils/priceCalculator';
 import { SupplierService } from '../Supplier/supplier.service';
+import { FeaturedHotelModel } from './featuredHotel.model';
 import { THotelSearchRequest, TRoomRequest } from './hotel.interface';
 
 const searchHotels = async (payload: THotelSearchRequest) => {
@@ -91,4 +92,26 @@ const getRooms = async (payload: TRoomRequest) => {
   }).flat();
 };
 
-export const HotelService = { searchHotels, getRooms };
+
+const toggleFeaturedHotelInDB = async (payload: any) => {
+  const { hotelId } = payload;
+  
+
+  return await FeaturedHotelModel.findOneAndUpdate(
+    { hotelId },
+    payload,
+    { upsert: true, new: true }
+  );
+};
+
+
+const getFeaturedHotelsFromDB = async () => {
+  return await FeaturedHotelModel.find({ isFeatured: true }).limit(6);
+};
+
+
+const removeFeaturedHotelFromDB = async (hotelId: string) => {
+  return await FeaturedHotelModel.findOneAndDelete({ hotelId });
+};
+
+export const HotelService = { searchHotels, getRooms, toggleFeaturedHotelInDB, getFeaturedHotelsFromDB, removeFeaturedHotelFromDB }; 

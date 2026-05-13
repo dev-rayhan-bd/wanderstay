@@ -32,5 +32,15 @@ router.post(
   auth(USER_ROLE.user, USER_ROLE.admin),
   BookingControllers.confirmCancel
 );
+router.get(
+  '/admin-stats',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingControllers.getAdminStats
+);
 
+router.get(
+  '/all-bookings',
+  auth(USER_ROLE.admin, USER_ROLE.superAdmin),
+  BookingControllers.getAllBookings
+);
 export const BookingRoutes = router;
