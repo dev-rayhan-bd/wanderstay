@@ -35,15 +35,25 @@ const getMyBookings = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-const cancelBooking = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params; 
-  const result = await BookingService.cancelBookingFromDB(id as string);
-
+const getCancelQuote = catchAsync(async (req: Request, res: Response) => {
+  const result = await BookingService.getCancellationQuote(req.params.id as string);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: 'Booking cancelled and refund processed successfully',
+    message: "Cancellation quote retrieved.",
     data: result,
   });
 });
-export const BookingControllers = { createBooking, getMyBookings, cancelBooking };
+
+
+const confirmCancel = catchAsync(async (req: Request, res: Response) => {
+  const result = await BookingService.confirmCancellationInDB(req.params.id as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Booking cancelled and refund processed.",
+    data: result,
+  });
+});
+
+export const BookingControllers = { createBooking, getMyBookings, getCancelQuote, confirmCancel };

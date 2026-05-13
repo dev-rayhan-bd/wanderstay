@@ -19,11 +19,18 @@ router.get(
   auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
   BookingControllers.getMyBookings
 );
+//when user click cancel booking
+router.get(
+  '/cancel-quote/:id',
+  auth(USER_ROLE.user, USER_ROLE.admin),
+  BookingControllers.getCancelQuote
+);
 
-router.patch(
-  '/cancel/:id',
-  auth(USER_ROLE.user, USER_ROLE.admin, USER_ROLE.superAdmin),
-  BookingControllers.cancelBooking
+//if user click confirm cancel after seeing quote "If you cancel now, a penalty of $50 will apply. You will get $260 back. Proceed?"
+router.post(
+  '/cancel-confirm/:id',
+  auth(USER_ROLE.user, USER_ROLE.admin),
+  BookingControllers.confirmCancel
 );
 
 export const BookingRoutes = router;
