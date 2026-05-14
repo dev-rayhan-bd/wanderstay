@@ -23,22 +23,66 @@ const getHotelRooms = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
-const toggleFeatured = catchAsync(async (req, res) => {
+
+const toggleFeatured = catchAsync(async (req: Request, res: Response) => {
   const result = await HotelService.toggleFeaturedHotelInDB(req.body);
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    message: "Hotel featured status updated",
-    data: result
+    message: "Hotel added to featured list",
+    data: result,
   });
 });
 
-const getFeatured = catchAsync(async (req, res) => {
+
+const removeFeatured = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;//hotelId
+  const result = await HotelService.removeFeaturedHotelFromDB(id as string);
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Hotel removed from featured list",
+    data: result,
+  });
+});
+
+
+const getFeatured = catchAsync(async (req: Request, res: Response) => {
   const result = await HotelService.getFeaturedHotelsFromDB();
   sendResponse(res, {
     statusCode: 200,
     success: true,
-    data: result
+    message: "Featured hotels fetched",
+    data: result,
   });
 });
-export const HotelControllers = { searchHotels, getHotelRooms, toggleFeatured, getFeatured };
+
+const searchHotelsFromSupplier = catchAsync(async (req: Request, res: Response) => {
+
+  const result = await HotelService.searchHotelsFromSupplier({ ...req.body, ...req.query });
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Hotels found matching your search.",
+    data: result,
+
+  });
+});
+
+
+
+const getHotelFullDetails = catchAsync(async (req: Request, res: Response) => {
+  const result = await HotelService.getHotelFullDetails(req.body);
+
+  sendResponse(res, {
+    statusCode: 200,
+    success: true,
+    message: "Hotel details and room availability fetched successfully.",
+    data: result,
+  });
+});
+
+
+
+export const HotelControllers = { searchHotels, getHotelRooms, toggleFeatured, removeFeatured, getFeatured, searchHotelsFromSupplier, getHotelFullDetails };
