@@ -23,6 +23,7 @@ export interface TBooking {
     rateBasisId: string;
     roomName: string;
     mealPlan: string;
+    allocationDetails?: string; // ✅ ADD THIS
   };
   checkIn: string;
   checkOut: string;
