@@ -1,14 +1,13 @@
-export const calculateFinalPrice = (supplierPrice: string | number) => {
+export const calculateFinalPrice = (supplierPrice: any, msp: number = 0) => {
   const PLATFORM_FEE_PERCENTAGE = 10;
-  
   const originalPrice = typeof supplierPrice === 'string' ? parseFloat(supplierPrice) : supplierPrice;
   
   const markupAmount = (originalPrice * PLATFORM_FEE_PERCENTAGE) / 100;
-  const finalPrice = Math.ceil(originalPrice + markupAmount);
+  let finalPrice = Math.ceil(originalPrice + markupAmount);
 
-  return {
-    finalPrice,      // customer amount
-    markupAmount,    // my profit
-    originalPrice    // supplier's original price
-  };
+  if (finalPrice < msp) {
+    finalPrice = msp;
+  }
+
+  return { finalPrice, markupAmount, originalPrice };
 };

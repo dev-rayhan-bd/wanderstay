@@ -46,8 +46,33 @@ export const stripeWebhookHandler = async (req: Request, res: Response) => {
 
     if (booking && booking.status === 'Pending') {
       console.log("💰 Money Authorized! Calling WebBeds for Hotel:", booking.hotelInfo.hotelName);
-
+   
       try {
+         const blockCheck = await SupplierService.callWebBeds('getrooms', {
+      bookingDetails: {
+        fromDate: booking.checkIn,
+        toDate: booking.checkOut,
+        rooms: { 
+          $: { no: "1" }, 
+          room: { 
+            $: { runno: "0" }, 
+            roomTypeCode: booking.roomInfo.roomTypeCode,
+            rateBasis: booking.roomInfo.rateBasisId 
+          } 
+        },
+        productId: booking.hotelInfo.hotelId,
+        roomTypeSelected: "yes" 
+      }
+    });
+
+    const isBlocked = blockCheck.result?.hotel?.rooms?.room?.roomType?.rateBases?.rateBasis?.status === "checked";
+
+    if (!isBlocked) {
+      console.log("❌ Room no longer available or blocked. Rolling back.");
+      await stripe.paymentIntents.cancel(paymentIntent.id);
+      await booking.updateOne({ status: 'Failed' });
+      return;
+    }
         const supplierPayload = {
           bookingDetails: {
             fromDate: booking.checkIn,

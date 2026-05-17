@@ -6,12 +6,19 @@ import { TBooking } from './booking.interface';
 import QueryBuilder from '../../builder/QueryBuilder';
 import { SupplierService } from '../Supplier/supplier.service';
 import { sendCancellationEmail } from '../../utils/sendEmail';
+import { formatWebBedsName } from '../../utils/webBedsFormatter';
+import AppError from '../../errors/AppError';
+import httpStatus from 'http-status';
 
 const initiateBookingInDB = async (payload: TBooking, userId: string) => {
+ const firstName = formatWebBedsName(payload.guestDetails.firstName);
+  const lastName = formatWebBedsName(payload.guestDetails.lastName);
 
-  const priceInfo = calculateFinalPrice(payload.totalAmount);
-
-  // ২. Stripe Checkout Session তৈরি করা
+ if (firstName.length < 2 || lastName.length < 2) {
+    throw new Error("Passenger names must contain at least 2 alphabetic characters.");
+  }
+    const priceInfo = calculateFinalPrice(payload.totalAmount);
+  //  Stripe Checkout Session create
   const session = await stripe.checkout.sessions.create({
     payment_method_types: ['card'], 
     line_items: [{
@@ -43,6 +50,11 @@ const initiateBookingInDB = async (payload: TBooking, userId: string) => {
 
   await BookingModel.create({
     ...payload,
+      guestDetails: {
+      ...payload.guestDetails,
+      firstName, 
+      lastName  
+    },
     user: userId,
 
   supplierPrice: priceInfo.originalPrice, 
@@ -118,10 +130,9 @@ const getCancellationQuote = async (id: string) => {
   };
 };
 
-
 const confirmCancellationInDB = async (id: string) => {
   const booking = await BookingModel.findById(id);
-  if (!booking) throw new Error("Booking not found");
+  if (!booking) throw new AppError(httpStatus.NOT_FOUND, "Booking not found");
 
 
   const quote = await getCancellationQuote(id);
@@ -130,13 +141,15 @@ const confirmCancellationInDB = async (id: string) => {
   const supplierRes = await SupplierService.callWebBeds('cancelbooking', {
     bookingDetails: {
       bookingCode: booking.supplierReference,
-      confirm: "yes" //
+      confirm: "yes", 
+      penaltyApplied: quote.penaltyCharge.toString() 
     }
   });
 
+
   if (true) {
     //supplierRes.result?.successful === "TRUE"
-  
+
     if (quote.refundableAmount > 0) {
       await stripe.refunds.create({
         payment_intent: booking.paymentIntentId,
@@ -144,16 +157,19 @@ const confirmCancellationInDB = async (id: string) => {
       });
     }
 
-   
+
     const result = await BookingModel.findByIdAndUpdate(
       id,
       { status: 'Cancelled', paymentStatus: 'Cancelled' },
       { new: true }
     );
- await sendCancellationEmail(booking.guestDetails.email, booking);
+    
+    await sendCancellationEmail(booking.guestDetails.email, booking);
     return result;
   } else {
-    throw new Error("Supplier refused cancellation. Please contact support.");
+
+    const errorMsg = supplierRes.result?.error || "Supplier refused cancellation.";
+    throw new AppError(httpStatus.BAD_REQUEST, errorMsg);
   }
 };
 

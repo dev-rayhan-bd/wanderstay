@@ -162,12 +162,8 @@ const searchHotels = async (payload: THotelSearchRequest) => {
 
 
 
-/**
- * ১. সার্চ এপিআই: এটি হোটেলের লিস্ট দেখাবে। 
- * স্যান্ডবক্স ডাটা না দিলে এটি স্মার্টলি আইডি অনুযায়ী নাম ও ছবি জেনারেট করবে।
- */
 const searchHotelsFromSupplier = async (payload: any) => {
-  const { cityCode, fromDate, toDate, adults } = payload;
+  const { cityCode, fromDate, toDate, adults,nationality = "1", countryOfResidence = "1"  } = payload;
 
   const searchDetails = {
     bookingDetails: {
@@ -179,7 +175,9 @@ const searchHotelsFromSupplier = async (payload: any) => {
           $: { runno: "0" },
           adultsCode: adults || "2",
           children: { $: { no: "0" } },
-          rateBasis: "-1"
+          rateBasis: "-1",
+          passengerNationality: nationality, 
+          passengerCountryOfResidence: countryOfResidence
         }
       }
     },
@@ -258,8 +256,8 @@ const getHotelFullDetails = async (payload: any) => {
   const hotelData = response.result?.hotel;
 
   if (!hotelData) throw new Error("Property details are currently unavailable from the supplier.");
+ const tariffNotes = hotelData.rooms?.room?.roomType?.rateBases?.rateBasis?.tariffNotes || "";
 
-  // ইমেজ গ্যালারি
   const gallery: string[] = []; 
   if (hotelData.hotelImages?.hotelImage) {
     const imgs = Array.isArray(hotelData.hotelImages.hotelImage) ? hotelData.hotelImages.hotelImage : [hotelData.hotelImages.hotelImage];
@@ -269,7 +267,7 @@ const getHotelFullDetails = async (payload: any) => {
     });
   }
 
-  // অ্যামেনিটিজ (Facilities)
+  // amenities (Facilities)
   const amenities: string[] = [];
   if (hotelData.amenities?.amenity) {
     const rawAmenity = Array.isArray(hotelData.amenities.amenity) ? hotelData.amenities.amenity : [hotelData.amenities.amenity];
@@ -279,7 +277,7 @@ const getHotelFullDetails = async (payload: any) => {
     });
   }
 
-  // রুম এবং পলিসি
+  
   const rawRoomTypes = hotelData?.rooms?.room?.roomType;
   const roomTypeList = Array.isArray(rawRoomTypes) ? rawRoomTypes : (rawRoomTypes ? [rawRoomTypes] : []);
 
@@ -291,6 +289,9 @@ const getHotelFullDetails = async (payload: any) => {
       return {
         roomTypeCode: rt.roomtypecode || rt.$?.roomtypecode,
         name: rt.name || rt.$?.name || "Premium Room",
+        tariffNotes: tariffNotes, 
+      propertyFees: hotelData.propertyFees || "0",
+      totalTaxes: hotelData.totalTaxes || "0",
         price: pInfo.finalPrice.toString(),
         mealPlan: rb.description || "Room Only",
         rateBasisId: rb.id || rb.$?.id,
