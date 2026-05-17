@@ -22,6 +22,7 @@ const bookingSchema = new Schema<TBooking>(
       rateBasisId: { type: String, required: true },
       roomName: { type: String, required: true },
       mealPlan: { type: String, required: true },
+       allocationDetails: { type: String },
     },
     checkIn: { type: String, required: true },
     checkOut: { type: String, required: true },
