@@ -35,5 +35,6 @@ export interface TBooking {
   paymentStatus: TPaymentStatus;
     supplierPrice: number;
     platformProfit: number;
+     childrenAges?: number[];
 
 }

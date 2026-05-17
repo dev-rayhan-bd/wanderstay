@@ -41,7 +41,7 @@ const bookingSchema = new Schema<TBooking>(
       default: 'Unpaid',
     },
   
-
+  childrenAges: { type: [Number], default: [] }, 
 supplierPrice: { type: Number, required: true }, 
 platformProfit: { type: Number, required: true }, 
   },

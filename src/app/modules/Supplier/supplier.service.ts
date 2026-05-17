@@ -2,7 +2,37 @@ import axios from 'axios';
 import config from '../../config';
 import { jsonToXml, xmlToJson } from '../../utils/xmlParser';
 
-const callWebBeds = async (requestCommand: string, details: any={}) => {
+// const callWebBeds = async (requestCommand: string, details: any={}) => {
+//   const payload = {
+//     customer: {
+//       username: config.dotw.username,
+//       password: config.dotw.password,
+//       id: config.dotw.id,
+//       source: "1",
+//       product: "hotel",
+//       language: "en",
+//       request: {
+//         $: { command: requestCommand },
+  
+//         ...details 
+//       }
+//     }
+//   };
+
+//   const xmlRequest = jsonToXml(payload);
+
+//   try {
+//     const { data } = await axios.post(config.dotw.url as string, xmlRequest, {
+//       headers: { 'Content-Type': 'text/xml' }
+//     });
+//     return await xmlToJson(data);
+//   } catch (error: any) {
+//     throw new Error('Supplier API connection failed');
+//   }
+// };
+
+
+const callWebBeds = async (requestCommand: string, details: any = {}) => {
   const payload = {
     customer: {
       username: config.dotw.username,
@@ -13,20 +43,35 @@ const callWebBeds = async (requestCommand: string, details: any={}) => {
       language: "en",
       request: {
         $: { command: requestCommand },
-  
-        ...details 
+        ...details
       }
     }
   };
 
   const xmlRequest = jsonToXml(payload);
 
+  // 📝 Certification Requirement: Logging RQ for documentation
+  console.log(`\n========== [XML REQUEST: ${requestCommand}] ==========`);
+  console.log(xmlRequest);
+  console.log(`====================================================\n`);
+
   try {
     const { data } = await axios.post(config.dotw.url as string, xmlRequest, {
-      headers: { 'Content-Type': 'text/xml' }
+      headers: { 
+        'Content-Type': 'text/xml',
+        // 🚀 Requirement No. 14: Gzip Compression is mandatory
+        'Accept-Encoding': 'gzip, deflate' 
+      }
     });
+
+    // 📝 Certification Requirement: Logging RS for documentation
+    console.log(`\n========== [XML RESPONSE: ${requestCommand}] ==========`);
+    console.log(data);
+    console.log(`====================================================\n`);
+
     return await xmlToJson(data);
   } catch (error: any) {
+    console.error("❌ Supplier API Error:", error.message);
     throw new Error('Supplier API connection failed');
   }
 };
